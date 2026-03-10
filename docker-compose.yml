@@ -1,0 +1,36 @@
+version: '3.9'
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: smartinvoice
+      POSTGRES_USER: smartinvoice
+      POSTGRES_PASSWORD: smartinvoice
+    ports:
+      - '5432:5432'
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql://smartinvoice:smartinvoice@db:5432/smartinvoice
+      JWT_SECRET_KEY: super-secret
+      CORS_ORIGINS: http://localhost:5173
+    ports:
+      - '5000:5000'
+    depends_on:
+      - db
+
+  frontend:
+    build: ./frontend
+    environment:
+      VITE_API_URL: http://localhost:5000/api
+    ports:
+      - '5173:5173'
+    depends_on:
+      - backend
+
+volumes:
+  db_data:
